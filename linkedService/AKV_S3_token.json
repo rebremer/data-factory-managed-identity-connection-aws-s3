@@ -1,0 +1,11 @@
+{
+	"name": "AKV_S3_token",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://test-awsadf-akv.vault.azure.net/"
+		}
+	}
+}

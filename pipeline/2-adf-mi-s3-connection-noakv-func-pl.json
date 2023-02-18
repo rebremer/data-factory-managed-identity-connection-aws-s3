@@ -1,0 +1,130 @@
+{
+	"name": "2-adf-mi-s3-connection-noakv-func-pl",
+	"properties": {
+		"activities": [
+			{
+				"name": "get temp tokens AWS S3 REST",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Get bearer code from ADF MI",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@concat('https://sts.amazonaws.com/?Action=AssumeRoleWithWebIdentity&RoleSessionName=app1&RoleArn=arn:aws:iam::',pipeline().parameters.aws_account_id,':role/AzureADWebIdentity3&WebIdentityToken=', substring(activity('Get bearer code from ADF MI').output.Response,7, sub(length(activity('Get bearer code from ADF MI').output.Response),7)), '&Version=2011-06-15')",
+						"type": "Expression"
+					},
+					"method": "GET"
+				}
+			},
+			{
+				"name": "copy data from S3 to ADLSgen2",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "get temp tokens AWS S3 REST",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AmazonS3ReadSettings",
+							"recursive": true
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "Binary1",
+						"type": "DatasetReference",
+						"parameters": {
+							"accesskeyid": {
+								"value": "@substring(activity('get temp tokens AWS S3 REST').output.Response, add(indexof(activity('get temp tokens AWS S3 REST').output.Response, '<accesskeyid>'),length('<accesskeyid>')), \nsub(sub(indexof(activity('get temp tokens AWS S3 REST').output.Response, '</accesskeyid>'), indexof(activity('get temp tokens AWS S3 REST').output.Response,'<accesskeyid>')), length('<accesskeyid>'))\n)",
+								"type": "Expression"
+							},
+							"secretaccesskey": {
+								"value": "@substring(activity('get temp tokens AWS S3 REST').output.Response, add(indexof(activity('get temp tokens AWS S3 REST').output.Response, '<secretaccesskey>'),length('<secretaccesskey>')), \nsub(sub(indexof(activity('get temp tokens AWS S3 REST').output.Response, '</secretaccesskey>'), indexof(activity('get temp tokens AWS S3 REST').output.Response,'<secretaccesskey>')), length('<secretaccesskey>'))\n)",
+								"type": "Expression"
+							},
+							"sessiontoken": {
+								"value": "@substring(activity('get temp tokens AWS S3 REST').output.Response, add(indexof(activity('get temp tokens AWS S3 REST').output.Response, '<sessiontoken>'),length('<sessiontoken>')), \nsub(sub(indexof(activity('get temp tokens AWS S3 REST').output.Response, '</sessiontoken>'), indexof(activity('get temp tokens AWS S3 REST').output.Response,'<sessiontoken>')), length('<sessiontoken>'))\n)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ADLSgen2",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Get bearer code from ADF MI",
+				"description": "\n# Code of Azure Function:\nimport azure.functions as func\n\ndef main(req: func.HttpRequest) -> func.HttpResponse:\n\n    return func.HttpResponse(req.headers['Authorization'])",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://test-awsadf-func.azurewebsites.net/api/AWS_S3_Connect",
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "api://aws_azure_federate"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"aws_account_id": {
+				"type": "string",
+				"defaultValue": "817966598045"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-02-18T18:19:30Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

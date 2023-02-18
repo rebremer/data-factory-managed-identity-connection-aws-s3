@@ -1,0 +1,9 @@
+{
+	"name": "test-awsadf-adf",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "6bbde1e1-a371-4047-8f41-f68a6ada25ae",
+		"tenantId": "594ef155-b5f1-4381-9218-2ea93f0645f2"
+	}
+}

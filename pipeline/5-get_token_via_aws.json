@@ -1,0 +1,31 @@
+{
+	"name": "5-get_token_via_aws",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get token via S3",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://error-bounce-bearer-bucket.s3.eu-central-1.amazonaws.com/",
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "api://aws_azure_federate"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-02-18T18:19:30Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

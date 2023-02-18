@@ -1,0 +1,44 @@
+{
+	"name": "Binary1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AmazonS3_linkedservice",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"accesskeyid": {
+					"value": "@string(dataset().accesskeyid)",
+					"type": "Expression"
+				},
+				"secretaccesskey": {
+					"value": "@string(dataset().secretaccesskey)",
+					"type": "Expression"
+				},
+				"sessiontoken": {
+					"value": "@string(dataset().sessiontoken)",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"accesskeyid": {
+				"type": "string"
+			},
+			"secretaccesskey": {
+				"type": "string"
+			},
+			"sessiontoken": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AmazonS3Location",
+				"bucketName": "testrbaws",
+				"fileName": "example_json.json"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
