@@ -1,0 +1,34 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "test-awsadf-adf"
+		},
+		"AKV_S3_token_properties_typeProperties_baseUrl": {
+			"value": "https://test-awsadf-akv.vault.azure.net/"
+		},
+		"AmazonS31_properties_typeProperties_accessKeyId": {
+			"value": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AKV_S3_token",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "adf-test-aws-aws-accesskeyid"
+			}
+		},
+		"AmazonS3_linkedservice_properties_typeProperties_accessKeyId": {
+			"value": "@{linkedService().accesskeyid}"
+		},
+		"AzureBlobStorage1_properties_typeProperties_serviceEndpoint": {
+			"value": "https://testawsadfrg8fd6.blob.core.windows.net/"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

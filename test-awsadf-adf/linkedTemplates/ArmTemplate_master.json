@@ -1,0 +1,77 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "test-awsadf-adf"
+		},
+		"AKV_S3_token_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://test-awsadf-akv.vault.azure.net/"
+		},
+		"AmazonS31_properties_typeProperties_accessKeyId": {
+			"type": "object",
+			"defaultValue": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AKV_S3_token",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "adf-test-aws-aws-accesskeyid"
+			}
+		},
+		"AmazonS3_linkedservice_properties_typeProperties_accessKeyId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().accesskeyid}"
+		},
+		"AzureBlobStorage1_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://testawsadfrg8fd6.blob.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "test-awsadf-adf_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AKV_S3_token_properties_typeProperties_baseUrl": {
+						"value": "[parameters('AKV_S3_token_properties_typeProperties_baseUrl')]"
+					},
+					"AmazonS3_linkedservice_properties_typeProperties_accessKeyId": {
+						"value": "[parameters('AmazonS3_linkedservice_properties_typeProperties_accessKeyId')]"
+					},
+					"AzureBlobStorage1_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('AzureBlobStorage1_properties_typeProperties_serviceEndpoint')]"
+					},
+					"AmazonS31_properties_typeProperties_accessKeyId": {
+						"value": "[parameters('AmazonS31_properties_typeProperties_accessKeyId')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

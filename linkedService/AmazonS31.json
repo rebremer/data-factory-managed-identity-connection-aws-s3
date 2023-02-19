@@ -1,0 +1,36 @@
+{
+	"name": "AmazonS31",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AmazonS3",
+		"typeProperties": {
+			"serviceUrl": "https://s3.amazonaws.com",
+			"accessKeyId": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AKV_S3_token",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "adf-test-aws-aws-accesskeyid"
+			},
+			"secretAccessKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AKV_S3_token",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "adf-test-aws-aws-secretaccesskey"
+			},
+			"authenticationType": "TemporarySecurityCredentials",
+			"sessionToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AKV_S3_token",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "adf-test-aws-aws-sessiontoken"
+			}
+		}
+	}
+}

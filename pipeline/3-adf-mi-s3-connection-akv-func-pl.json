@@ -1,0 +1,210 @@
+{
+	"name": "3-adf-mi-s3-connection-akv-func-pl",
+	"properties": {
+		"activities": [
+			{
+				"name": "get temp tokens AWS S3 REST",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Get bearer code from ADF MI",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": true,
+					"secureInput": true
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@concat('https://sts.amazonaws.com/?Action=AssumeRoleWithWebIdentity&RoleSessionName=app1&RoleArn=arn:aws:iam::',pipeline().parameters.aws_account_id,':role/AzureADWebIdentity3&WebIdentityToken=', substring(activity('Get bearer code from ADF MI').output.Response,7, sub(length(activity('Get bearer code from ADF MI').output.Response),7)), '&Version=2011-06-15')",
+						"type": "Expression"
+					},
+					"method": "GET"
+				}
+			},
+			{
+				"name": "Write AWS temp tokens AKV",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "get temp tokens AWS S3 REST",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.AWSlisttempkeys",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Set tempAWS",
+							"description": "SetSessionKeyId",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "tempAWS",
+								"value": {
+									"value": "@substring(activity('get temp tokens AWS S3 REST').output.Response, add(indexof(activity('get temp tokens AWS S3 REST').output.Response, concat('<',item(),'>')),add(length(item()),2)), \nsub(sub(indexof(activity('get temp tokens AWS S3 REST').output.Response, concat('</',item(),'>')), indexof(activity('get temp tokens AWS S3 REST').output.Response,concat('<',item(),'>'))), add(length(item()),2))\n)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Write SessionKeyId to AKV",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "Set tempAWS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": true,
+								"secureInput": true
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": {
+									"value": "@concat('https://test-awsadf-akv.vault.azure.net/secrets/adf-test-aws-aws-', item(), '?api-version=7.3')",
+									"type": "Expression"
+								},
+								"method": "PUT",
+								"body": {
+									"value": "@concat('{\"value\": \"',variables('tempAWS'),'\"}')\n\n",
+									"type": "Expression"
+								},
+								"authentication": {
+									"type": "MSI",
+									"resource": "https://vault.azure.net"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "copy data from S3 to ADLSgen2",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Write AWS temp tokens AKV",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AmazonS3ReadSettings",
+							"recursive": true
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "Binary2",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ADLSgen2",
+						"type": "DatasetReference",
+						"parameters": {
+							"azure_storage": {
+								"value": "@pipeline().parameters.azure_storage",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Get bearer code from ADF MI",
+				"description": "\n# Code of Azure Function:\nimport azure.functions as func\n\ndef main(req: func.HttpRequest) -> func.HttpResponse:\n\n    return func.HttpResponse(req.headers['Authorization'])",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": true,
+					"secureInput": true
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://test-awsadf-func.azurewebsites.net/api/AWS_S3_Connect",
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "api://aws_azure_federate"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"AWSlisttempkeys": {
+				"type": "array",
+				"defaultValue": [
+					"accesskeyid",
+					"secretaccesskey",
+					"sessiontoken"
+				]
+			},
+			"aws_account_id": {
+				"type": "string",
+				"defaultValue": "123456789012"
+			},
+			"azure_storage": {
+				"type": "string",
+				"defaultValue": "testawsadfrg8fd6"
+			}
+		},
+		"variables": {
+			"tempAWS": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-02-18T18:19:30Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

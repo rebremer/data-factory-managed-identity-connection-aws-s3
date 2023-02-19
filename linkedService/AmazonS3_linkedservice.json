@@ -1,0 +1,26 @@
+{
+	"name": "AmazonS3_linkedservice",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"accesskeyid": {
+				"type": "string"
+			},
+			"secretaccesskey": {
+				"type": "string"
+			},
+			"sessiontoken": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AmazonS3",
+		"typeProperties": {
+			"serviceUrl": "https://s3.amazonaws.com",
+			"accessKeyId": "@{linkedService().accesskeyid}",
+			"secretAccessKey": "@{linkedService().secretaccesskey}",
+			"authenticationType": "TemporarySecurityCredentials",
+			"sessionToken": "@{linkedService().sessiontoken}"
+		}
+	}
+}
